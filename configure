@@ -682,6 +682,8 @@ HAS_KLONDIKE_FALSE
 HAS_KLONDIKE_TRUE
 HAS_ICARUS_FALSE
 HAS_ICARUS_TRUE
+HAS_GRIDSEED_FALSE
+HAS_GRIDSEED_TRUE
 HAS_HASHFAST_FALSE
 HAS_HASHFAST_TRUE
 HAS_BITFURY_FALSE
@@ -969,6 +971,7 @@ enable_bflsc
 enable_bitforce
 enable_bitfury
 enable_hashfast
+enable_gridseed
 enable_icarus
 enable_klondike
 enable_modminer
@@ -1634,6 +1637,7 @@ Optional Features:
                           disabled)
   --enable-bitfury        Compile support for BitFury ASICs (default disabled)
   --enable-hashfast       Compile support for Hashfast (default disabled)
+  --enable-gridseed       Compile support for GridSeed (default disabled)
   --enable-icarus         Compile support for Icarus (default disabled)
   --enable-klondike       Compile support for Klondike (default disabled)
   --enable-modminer       Compile support for ModMiner FPGAs(default disabled)
@@ -6610,8 +6614,7 @@ else
     ;;
   *)
     lt_cv_sys_max_cmd_len=`(getconf ARG_MAX) 2> /dev/null`
-    if test -n "$lt_cv_sys_max_cmd_len" && \
-	test undefined != "$lt_cv_sys_max_cmd_len"; then
+    if test -n "$lt_cv_sys_max_cmd_len"; then
       lt_cv_sys_max_cmd_len=`expr $lt_cv_sys_max_cmd_len \/ 4`
       lt_cv_sys_max_cmd_len=`expr $lt_cv_sys_max_cmd_len \* 3`
     else
@@ -8147,14 +8150,7 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
 	    LD="${LD-ld} -m elf_i386_fbsd"
 	    ;;
 	  x86_64-*linux*)
-	    case `/usr/bin/file conftest.o` in
-	      *x86-64*)
-		LD="${LD-ld} -m elf32_x86_64"
-		;;
-	      *)
-		LD="${LD-ld} -m elf_i386"
-		;;
-	    esac
+	    LD="${LD-ld} -m elf_i386"
 	    ;;
 	  ppc64-*linux*|powerpc64-*linux*)
 	    LD="${LD-ld} -m elf32ppclinux"
@@ -16074,8 +16070,6 @@ if test "${enable_adl+set}" = set; then :
 fi
 
 
-scrypt="no"
-
 if test "$found_opencl" = 1; then
 	if test "x$adl" != xno; then
 		ADL_CPPFLAGS=
@@ -16136,20 +16130,22 @@ $as_echo "#define HAVE_ADL 1" >>confdefs.h
 			DLOPEN_FLAGS=""
 		fi
 	fi
+else
+	DLOPEN_FLAGS=""
+fi
 
-	# Check whether --enable-scrypt was given.
+scrypt="no"
+
+# Check whether --enable-scrypt was given.
 if test "${enable_scrypt+set}" = set; then :
   enableval=$enable_scrypt; scrypt=$enableval
 
 fi
 
-	if test "x$scrypt" = xyes; then
+if test "x$scrypt" = xyes; then
 
 $as_echo "#define USE_SCRYPT 1" >>confdefs.h
 
-	fi
-else
-	DLOPEN_FLAGS=""
 fi
 
  if test x$scrypt = xyes; then
@@ -16290,6 +16286,28 @@ fi
 else
   HAS_HASHFAST_TRUE='#'
   HAS_HASHFAST_FALSE=
+fi
+
+
+gridseed="no"
+
+# Check whether --enable-gridseed was given.
+if test "${enable_gridseed+set}" = set; then :
+  enableval=$enable_gridseed; gridseed=$enableval
+
+fi
+
+if test "x$gridseed" = xyes; then
+
+$as_echo "#define USE_GRIDSEED 1" >>confdefs.h
+
+fi
+ if test x$gridseed = xyes; then
+  HAS_GRIDSEED_TRUE=
+  HAS_GRIDSEED_FALSE='#'
+else
+  HAS_GRIDSEED_TRUE='#'
+  HAS_GRIDSEED_FALSE=
 fi
 
 
@@ -16446,7 +16464,7 @@ fi
 
 fi
 
-if test x$avalon$bitforce$bitfury$modminer$bflsc$icarus$hashfast$klondike != xnononononononono; then
+if test x$avalon$bitforce$bitfury$modminer$bflsc$gridseed$icarus$hashfast$klondike != xnonononononononono; then
 	want_usbutils=true
 else
 	want_usbutils=false
@@ -17557,6 +17575,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HAS_HASHFAST_TRUE}" && test -z "${HAS_HASHFAST_FALSE}"; then
   as_fn_error $? "conditional \"HAS_HASHFAST\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${HAS_GRIDSEED_TRUE}" && test -z "${HAS_GRIDSEED_FALSE}"; then
+  as_fn_error $? "conditional \"HAS_GRIDSEED\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HAS_ICARUS_TRUE}" && test -z "${HAS_ICARUS_FALSE}"; then
@@ -19996,28 +20018,27 @@ fi
 echo "  curses.TUI...........: $cursesmsg"
 
 
+if test "x$scrypt" != xno; then
+	echo "  scrypt...............: Enabled"
+else
+	echo "  scrypt...............: Disabled"
+fi
+
 if test "x$opencl" != xno; then
 	if test $found_opencl = 1; then
 		echo "  OpenCL...............: FOUND. GPU mining support enabled"
-	if test "x$scrypt" != xno; then
-		echo "  scrypt...............: Enabled"
-	else
-		echo "  scrypt...............: Disabled"
-	fi
 
 	else
 		echo "  OpenCL...............: NOT FOUND. GPU mining support DISABLED"
-		if test "x$avalon$bitforce$bitfury$icarus$modminer$bflsc$hashfast$klondike$knc" = xnonononononononono; then
+		if test "x$avalon$bitforce$bitfury$gridseed$icarus$modminer$bflsc$hashfast$klondike$knc" = xnononononononononono; then
 			as_fn_error $? "No mining configured in" "$LINENO" 5
 		fi
-		echo "  scrypt...............: Disabled (needs OpenCL)"
 	fi
 else
 	echo "  OpenCL...............: Detection overrided. GPU mining support DISABLED"
-	if test "x$avalon$bitforce$bitfury$icarus$modminer$bflsc$hashfast$klondike$knc" = xnonononononononono; then
+	if test "x$avalon$bitforce$bitfury$gridseed$icarus$modminer$bflsc$hashfast$klondike$knc" = xnononononononononono; then
 		as_fn_error $? "No mining configured in" "$LINENO" 5
 	fi
-	echo "  scrypt...............: Disabled (needs OpenCL)"
 fi
 
 if test "x$adl" != xno; then
@@ -20065,6 +20086,12 @@ if test "x$hashfast" = xyes; then
 	echo "  Hashfast.ASICs.......: Enabled"
 else
 	echo "  Hashfast.ASICs.......: Disabled"
+fi
+
+if test "x$gridseed" = xyes; then
+	echo "  GridSeed.ASICs.......: Enabled"
+else
+	echo "  GridSeed.ASICs.......: Disabled"
 fi
 
 if test "x$icarus" = xyes; then

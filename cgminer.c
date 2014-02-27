@@ -56,6 +56,7 @@ char *curly = ":D";
 #include "findnonce.h"
 #include "adl.h"
 #include "driver-opencl.h"
+#include "driver-gridseed.h"
 #include "bench_block.h"
 #include "scrypt.h"
 #ifdef USE_USBUTILS
@@ -116,13 +117,13 @@ unsigned long global_quota_gcd = 1;
 #if defined(HAVE_OPENCL) || defined(USE_USBUTILS)
 int nDevs;
 #endif
+#ifdef USE_SCRYPT
+bool opt_scrypt;
+#endif
 #ifdef HAVE_OPENCL
 int opt_dynamic_interval = 7;
 int opt_g_threads = -1;
 int gpu_threads;
-#ifdef USE_SCRYPT
-bool opt_scrypt;
-#endif
 #endif
 bool opt_restart = true;
 bool opt_nogpu;
@@ -172,6 +173,9 @@ bool opt_worktime;
 #ifdef USE_AVALON
 char *opt_avalon_options = NULL;
 char *opt_bitburner_fury_options = NULL;
+#endif
+#ifdef USE_GRIDSEED
+char *opt_gridseed_options = NULL;
 #endif
 #ifdef USE_KLONDIKE
 char *opt_klondike_options = NULL;
@@ -1022,6 +1026,15 @@ static char *set_api_mcast_des(const char *arg)
 	return NULL;
 }
 
+#ifdef USE_GRIDSEED
+static char *set_gridseed_options(const char *arg)
+{
+	opt_set_charp(arg, &opt_gridseed_options);
+
+	return NULL;
+}
+#endif
+
 #ifdef USE_ICARUS
 static char *set_icarus_options(const char *arg)
 {
@@ -1238,6 +1251,11 @@ static struct opt_table opt_config_table[] = {
 		     set_kernel, NULL, NULL,
 		     "Override sha256 kernel to use (diablo, poclbm, phatk or diakgcn) - one value or comma separated"),
 #endif
+#ifdef USE_GRIDSEED
+	OPT_WITH_ARG("--gridseed-options",
+		     set_gridseed_options, NULL, NULL,
+		     opt_hidden),
+#endif
 #ifdef USE_ICARUS
 	OPT_WITH_ARG("--icarus-options",
 		     set_icarus_options, NULL, NULL,
@@ -1373,6 +1391,8 @@ static struct opt_table opt_config_table[] = {
 	OPT_WITHOUT_ARG("--scrypt",
 			opt_set_bool, &opt_scrypt,
 			"Use the scrypt algorithm for mining (litecoin only)"),
+#endif
+#ifdef HAVE_OPENCL
 	OPT_WITH_ARG("--shaders",
 		     set_shaders, NULL, NULL,
 		     "GPU shaders per card for tuning scrypt, comma separated"),
@@ -1415,7 +1435,7 @@ static struct opt_table opt_config_table[] = {
 			opt_hidden
 #endif
 	),
-#ifdef USE_SCRYPT
+#ifdef HAVE_OPENCL
 	OPT_WITH_ARG("--thread-concurrency",
 		     set_thread_concurrency, NULL, NULL,
 		     "Set GPU thread concurrency for scrypt mining, comma separated"),
@@ -1616,6 +1636,9 @@ static char *opt_verusage_and_exit(const char *extra)
 #endif
 #ifdef HAVE_OPENCL
 		"GPU "
+#endif
+#ifdef USE_GRIDSEED
+		"GridSeed "
 #endif
 #ifdef USE_HASHFAST
 		"hashfast "
@@ -3266,11 +3289,9 @@ static void __kill_work(void)
 #ifdef USE_USBUTILS
 	/* Best to get rid of it first so it doesn't
 	 * try to create any new devices */
-	if (!opt_scrypt) {
-		forcelog(LOG_DEBUG, "Killing off HotPlug thread");
-		thr = &control_thr[hotplug_thr_id];
-		kill_timeout(thr);
-	}
+	forcelog(LOG_DEBUG, "Killing off HotPlug thread");
+	thr = &control_thr[hotplug_thr_id];
+	kill_timeout(thr);
 #endif
 
 	forcelog(LOG_DEBUG, "Killing off watchpool thread");
@@ -3313,14 +3334,12 @@ static void __kill_work(void)
 #ifdef USE_USBUTILS
 	/* Release USB resources in case it's a restart
 	 * and not a QUIT */
-	if (!opt_scrypt) {
-		forcelog(LOG_DEBUG, "Releasing all USB devices");
-		cg_completion_timeout(&usb_cleanup, NULL, 1000);
+	forcelog(LOG_DEBUG, "Releasing all USB devices");
+	cg_completion_timeout(&usb_cleanup, NULL, 1000);
 
-		forcelog(LOG_DEBUG, "Killing off usbres thread");
-		thr = &control_thr[usbres_thr_id];
-		kill_timeout(thr);
-	}
+	forcelog(LOG_DEBUG, "Killing off usbres thread");
+	thr = &control_thr[usbres_thr_id];
+	kill_timeout(thr);
 #endif
 
 }
@@ -7119,7 +7138,7 @@ static void *watchpool_thread(void __maybe_unused *userdata)
  * the screen at regular intervals, and restarts threads if they appear to have
  * died. */
 #define WATCHDOG_INTERVAL		2
-#define WATCHDOG_SICK_TIME		120
+#define WATCHDOG_SICK_TIME		60
 #define WATCHDOG_DEAD_TIME		600
 #define WATCHDOG_SICK_COUNT		(WATCHDOG_SICK_TIME/WATCHDOG_INTERVAL)
 #define WATCHDOG_DEAD_COUNT		(WATCHDOG_DEAD_TIME/WATCHDOG_INTERVAL)
@@ -7400,8 +7419,8 @@ static void clean_up(bool restarting)
 #endif
 #ifdef USE_USBUTILS
 	usb_polling = false;
-	pthread_join(usb_poll_thread, NULL);
-        libusb_exit(NULL);
+	int err = pthread_join(usb_poll_thread, NULL);
+	libusb_exit(NULL);
 #endif
 
 	cgtime(&total_tv_end);
@@ -8177,23 +8196,24 @@ int main(int argc, char *argv[])
 	usb_initialise();
 
 	// before device detection
-	if (!opt_scrypt) {
-		cgsem_init(&usb_resource_sem);
-		usbres_thr_id = 1;
-		thr = &control_thr[usbres_thr_id];
-		if (thr_info_create(thr, NULL, usb_resource_thread, thr))
-			quit(1, "usb resource thread create failed");
-		pthread_detach(thr->pth);
-	}
+	cgsem_init(&usb_resource_sem);
+	usbres_thr_id = 1;
+	thr = &control_thr[usbres_thr_id];
+	if (thr_info_create(thr, NULL, usb_resource_thread, thr))
+		quit(1, "usb resource thread create failed");
+	pthread_detach(thr->pth);
 #endif
 
 	/* Use the DRIVER_PARSE_COMMANDS macro to fill all the device_drvs */
 	DRIVER_PARSE_COMMANDS(DRIVER_FILL_DEVICE_DRV)
 
-	if (opt_scrypt)
+	if (opt_scrypt) {
 		opencl_drv.drv_detect(false);
-	else {
-	/* Use the DRIVER_PARSE_COMMANDS macro to detect all devices */
+#ifdef USE_GRIDSEED
+		gridseed_drv.drv_detect(false);
+#endif
+	} else {
+		/* Use the DRIVER_PARSE_COMMANDS macro to detect all devices */
 		DRIVER_PARSE_COMMANDS(DRIVER_DRV_DETECT_ALL)
 	}
 
@@ -8446,13 +8466,11 @@ begin_bench:
 		quit(1, "API thread create failed");
 
 #ifdef USE_USBUTILS
-	if (!opt_scrypt) {
-		hotplug_thr_id = 7;
-		thr = &control_thr[hotplug_thr_id];
-		if (thr_info_create(thr, NULL, hotplug_thread, thr))
-			quit(1, "hotplug thread create failed");
-		pthread_detach(thr->pth);
-	}
+	hotplug_thr_id = 7;
+	thr = &control_thr[hotplug_thr_id];
+	if (thr_info_create(thr, NULL, hotplug_thread, thr))
+		quit(1, "hotplug thread create failed");
+	pthread_detach(thr->pth);
 #endif
 
 #ifdef HAVE_CURSES

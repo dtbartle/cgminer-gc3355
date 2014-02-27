@@ -246,6 +246,7 @@ static inline int fsync (int fd)
 #define ASIC_PARSE_COMMANDS(DRIVER_ADD_COMMAND) \
 	DRIVER_ADD_COMMAND(bflsc) \
 	DRIVER_ADD_COMMAND(bitfury) \
+	DRIVER_ADD_COMMAND(gridseed) \
 	DRIVER_ADD_COMMAND(hashfast) \
 	DRIVER_ADD_COMMAND(klondike) \
 	DRIVER_ADD_COMMAND(knc) \
@@ -1042,6 +1043,9 @@ extern bool opt_worktime;
 #ifdef USE_AVALON
 extern char *opt_avalon_options;
 extern char *opt_bitburner_fury_options;
+#endif
+#ifdef USE_GRIDSEED
+extern char *opt_gridseed_options;
 #endif
 #ifdef USE_KLONDIKE
 extern char *opt_klondike_options;

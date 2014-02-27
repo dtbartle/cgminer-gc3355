@@ -191,8 +191,6 @@ AC_ARG_ENABLE([adl],
 	[adl=$enableval]
 	)
 
-scrypt="no"
-
 if test "$found_opencl" = 1; then
 	if test "x$adl" != xno; then
 		ADL_CPPFLAGS=
@@ -207,16 +205,18 @@ if test "$found_opencl" = 1; then
 			DLOPEN_FLAGS=""
 		fi
 	fi
-
-	AC_ARG_ENABLE([scrypt],
-		[AC_HELP_STRING([--enable-scrypt],[Compile support for scrypt litecoin mining (default disabled)])],
-		[scrypt=$enableval]
-		)
-	if test "x$scrypt" = xyes; then
-		AC_DEFINE([USE_SCRYPT], [1], [Defined to 1 if scrypt support is wanted])
-	fi
 else
 	DLOPEN_FLAGS=""
+fi
+
+scrypt="no"
+
+AC_ARG_ENABLE([scrypt],
+	[AC_HELP_STRING([--enable-scrypt],[Compile support for scrypt litecoin mining (default disabled)])],
+	[scrypt=$enableval]
+	)
+if test "x$scrypt" = xyes; then
+	AC_DEFINE([USE_SCRYPT], [1], [Defined to 1 if scrypt support is wanted])
 fi
 
 AM_CONDITIONAL([HAS_SCRYPT], [test x$scrypt = xyes])
@@ -287,6 +287,17 @@ if test "x$hashfast" = xyes; then
 fi
 AM_CONDITIONAL([HAS_HASHFAST], [test x$hashfast = xyes])
 
+gridseed="no"
+
+AC_ARG_ENABLE([gridseed],
+	[AC_HELP_STRING([--enable-gridseed],[Compile support for GridSeed (default disabled)])],
+	[gridseed=$enableval]
+	)
+if test "x$gridseed" = xyes; then
+	AC_DEFINE([USE_GRIDSEED], [1], [Defined to 1 if GridSeed support is wanted])
+fi
+AM_CONDITIONAL([HAS_GRIDSEED], [test x$gridseed = xyes])
+
 icarus="no"
 
 AC_ARG_ENABLE([icarus],
@@ -344,7 +355,7 @@ else
 	])
 fi
 
-if test x$avalon$bitforce$bitfury$modminer$bflsc$icarus$hashfast$klondike != xnononononononono; then
+if test x$avalon$bitforce$bitfury$modminer$bflsc$gridseed$icarus$hashfast$klondike != xnonononononononono; then
 	want_usbutils=true
 else
 	want_usbutils=false
@@ -526,28 +537,27 @@ fi
 echo "  curses.TUI...........: $cursesmsg"
 
 
+if test "x$scrypt" != xno; then
+	echo "  scrypt...............: Enabled"
+else
+	echo "  scrypt...............: Disabled"
+fi
+
 if test "x$opencl" != xno; then
 	if test $found_opencl = 1; then
 		echo "  OpenCL...............: FOUND. GPU mining support enabled"
-	if test "x$scrypt" != xno; then
-		echo "  scrypt...............: Enabled"
-	else
-		echo "  scrypt...............: Disabled"
-	fi
 
 	else
 		echo "  OpenCL...............: NOT FOUND. GPU mining support DISABLED"
-		if test "x$avalon$bitforce$bitfury$icarus$modminer$bflsc$hashfast$klondike$knc" = xnonononononononono; then
+		if test "x$avalon$bitforce$bitfury$gridseed$icarus$modminer$bflsc$hashfast$klondike$knc" = xnononononononononono; then
 			AC_MSG_ERROR([No mining configured in])
 		fi
-		echo "  scrypt...............: Disabled (needs OpenCL)"
 	fi
 else
 	echo "  OpenCL...............: Detection overrided. GPU mining support DISABLED"
-	if test "x$avalon$bitforce$bitfury$icarus$modminer$bflsc$hashfast$klondike$knc" = xnonononononononono; then
+	if test "x$avalon$bitforce$bitfury$gridseed$icarus$modminer$bflsc$hashfast$klondike$knc" = xnononononononononono; then
 		AC_MSG_ERROR([No mining configured in])
 	fi
-	echo "  scrypt...............: Disabled (needs OpenCL)"
 fi
 
 if test "x$adl" != xno; then
@@ -595,6 +605,12 @@ if test "x$hashfast" = xyes; then
 	echo "  Hashfast.ASICs.......: Enabled"
 else
 	echo "  Hashfast.ASICs.......: Disabled"
+fi
+
+if test "x$gridseed" = xyes; then
+	echo "  GridSeed.ASICs.......: Enabled"
+else
+	echo "  GridSeed.ASICs.......: Disabled"
 fi
 
 if test "x$icarus" = xyes; then

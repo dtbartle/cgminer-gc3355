@@ -365,6 +365,9 @@
 /* Defined to 1 if BitFury support is wanted */
 #undef USE_BITFURY
 
+/* Defined to 1 if GridSeed support is wanted */
+#undef USE_GRIDSEED
+
 /* Defined to 1 if Hashfast support is wanted */
 #undef USE_HASHFAST
 

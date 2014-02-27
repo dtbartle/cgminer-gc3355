@@ -57,6 +57,8 @@
 
 #define USB_CONFIG 1
 
+#define GRIDSEED_TIMEOUT_MS 999
+
 #ifdef WIN32
 #define BFLSC_TIMEOUT_MS 999
 #define BITFORCE_TIMEOUT_MS 999
@@ -157,6 +159,45 @@ static struct usb_epinfo hfa1_epinfos[] = {
 static struct usb_intinfo hfa_ints[] = {
 	USB_EPS(1,  hfa1_epinfos),
 	USB_EPS(0,  hfa0_epinfos)
+};
+#endif
+
+#ifdef USE_GRIDSEED
+static struct usb_epinfo gsd_epinfos[] = {
+//	{ LIBUSB_TRANSFER_TYPE_INTERRUPT,	8,	EPI(2), 0, 0 },
+	{ LIBUSB_TRANSFER_TYPE_BULK,	64,	EPI(1), 0, 0 },
+	{ LIBUSB_TRANSFER_TYPE_BULK,	64,	EPO(3), 0, 0 }
+};
+
+static struct usb_intinfo gsd_ints[] = {
+	USB_EPS(1, gsd_epinfos)
+};
+
+static struct usb_epinfo gsd1_epinfos[] = {
+	{ LIBUSB_TRANSFER_TYPE_BULK,	64,	EPI(1), 0, 0 },
+	{ LIBUSB_TRANSFER_TYPE_BULK,	64,	EPO(1), 0, 0 }
+};
+
+static struct usb_intinfo gsd1_ints[] = {
+	USB_EPS(0, gsd1_epinfos)
+};
+
+static struct usb_epinfo gsd2_epinfos[] = {
+	{ LIBUSB_TRANSFER_TYPE_BULK,	512,	EPI(1), 0, 0 },
+	{ LIBUSB_TRANSFER_TYPE_BULK,	512,	EPO(2), 0, 0 }
+};
+
+static struct usb_intinfo gsd2_ints[] = {
+	USB_EPS(0, gsd2_epinfos)
+};
+
+static struct usb_epinfo gsd3_epinfos[] = {
+	{ LIBUSB_TRANSFER_TYPE_BULK,	64,	EPI(3), 0, 0 },
+	{ LIBUSB_TRANSFER_TYPE_BULK,	64,	EPO(2), 0, 0 }
+};
+
+static struct usb_intinfo gsd3_ints[] = {
+	USB_EPS(0, gsd3_epinfos)
 };
 #endif
 
@@ -383,6 +424,53 @@ static struct usb_find_devices find_dev[] = {
 		.timeout = KLONDIKE_TIMEOUT_MS,
 		.latency = 10,
 		INTINFO(kln_ints) },
+#endif
+#ifdef USE_GRIDSEED
+	{
+		.drv = DRIVER_gridseed,
+		.name = "GSD",
+		.ident = IDENT_GSD,
+		.idVendor = 0x0483,
+		.idProduct = 0x5740,
+		.iManufacturer = "STMicroelectronics",
+		.iProduct = "STM32 Virtual COM Port  ",
+		.config = 1,
+		.timeout = GRIDSEED_TIMEOUT_MS,
+		.latency = LATENCY_STD,
+		INTINFO(gsd_ints) },
+	{
+		.drv = DRIVER_gridseed,
+		.name = "GSD",
+		.ident = IDENT_GSD1,
+		.idVendor = 0x10c4,
+		.idProduct = 0xea60,
+		.iProduct = "CP2102 USB to UART Bridge Controller",
+		.config = 1,
+		.timeout = GRIDSEED_TIMEOUT_MS,
+		.latency = LATENCY_STD,
+		INTINFO(gsd1_ints) },
+	{
+		.drv = DRIVER_gridseed,
+		.name = "GSD",
+		.ident = IDENT_GSD2,
+		.idVendor = IDVENDOR_FTDI,
+		.idProduct = 0x6010,
+		.iProduct = "Dual RS232-HS",
+		.config = 1,
+		.timeout = GRIDSEED_TIMEOUT_MS,
+		.latency = LATENCY_STD,
+		INTINFO(gsd2_ints) },
+	{
+		.drv = DRIVER_gridseed,
+		.name = "GSD",
+		.ident = IDENT_GSD3,
+		.idVendor = 0x067b,
+		.idProduct = 0x2303,
+		.iProduct = "USB-Serial Controller",
+		.config = 1,
+		.timeout = GRIDSEED_TIMEOUT_MS,
+		.latency = LATENCY_STD,
+		INTINFO(gsd3_ints) },
 #endif
 #ifdef USE_ICARUS
 	{

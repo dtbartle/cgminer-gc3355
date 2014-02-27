@@ -45,6 +45,10 @@ cgminer_SOURCES	+= elist.h miner.h compat.h bench_block.h	\
 
 cgminer_SOURCES	+= logging.c
 
+if HAS_SCRYPT
+cgminer_SOURCES += scrypt.c scrypt.h
+endif
+
 if HAS_OPENCL
 bin_SCRIPTS	= $(top_srcdir)/*.cl
 
@@ -52,10 +56,6 @@ cgminer_SOURCES += driver-opencl.h driver-opencl.c
 cgminer_SOURCES += ocl.c ocl.h findnonce.c findnonce.h
 cgminer_SOURCES += adl.c adl.h adl_functions.h
 cgminer_SOURCES += *.cl
-
-if HAS_SCRYPT
-cgminer_SOURCES += scrypt.c scrypt.h
-endif
 
 endif
 
@@ -92,8 +92,12 @@ if HAS_BITFURY
 cgminer_SOURCES += driver-bitfury.c driver-bitfury.h
 endif
 
+if HAS_GRIDSEED
+cgminer_SOURCES += driver-gridseed.c driver-gridseed.h
+endif
+
 if HAS_ICARUS
-cgminer_SOURCES += driver-icarus.c
+cgminer_SOURCES += driver-icarus.c driver-gridseed.c driver-gridseed.h
 endif
 
 if HAS_KLONDIKE

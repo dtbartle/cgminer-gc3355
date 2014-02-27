@@ -29,7 +29,7 @@
 #include "miner.h"
 #include "util.h"
 
-#if defined(USE_BFLSC) || defined(USE_AVALON) || defined(USE_HASHFAST) || defined(USE_BITFURY) || defined(USE_KLONDIKE) || defined(USE_KNC)
+#if defined(USE_BFLSC) || defined(USE_AVALON) || defined(USE_HASHFAST) || defined(USE_BITFURY) || defined(USE_KLONDIKE) || defined(USE_KNC) || defined(USE_GRIDSEED)
 #define HAVE_AN_ASIC 1
 #endif
 
@@ -181,6 +181,9 @@ static const char *DEVICECODE = ""
 #endif
 #ifdef HAVE_OPENCL
 			"GPU "
+#endif
+#ifdef USE_GRIDSEED
+			"GSD "
 #endif
 #ifdef USE_HASHFAST
 			"HFA "

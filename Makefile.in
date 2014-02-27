@@ -55,10 +55,10 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 bin_PROGRAMS = cgminer$(EXEEXT)
-@HAS_OPENCL_TRUE@am__append_1 = driver-opencl.h driver-opencl.c ocl.c \
+@HAS_SCRYPT_TRUE@am__append_1 = scrypt.c scrypt.h
+@HAS_OPENCL_TRUE@am__append_2 = driver-opencl.h driver-opencl.c ocl.c \
 @HAS_OPENCL_TRUE@	ocl.h findnonce.c findnonce.h adl.c adl.h \
 @HAS_OPENCL_TRUE@	adl_functions.h *.cl
-@HAS_OPENCL_TRUE@@HAS_SCRYPT_TRUE@am__append_2 = scrypt.c scrypt.h
 @NEED_FPGAUTILS_TRUE@am__append_3 = fpgautils.c fpgautils.h
 @WANT_USBUTILS_TRUE@am__append_4 = usbutils.c usbutils.h
 
@@ -69,9 +69,10 @@ bin_PROGRAMS = cgminer$(EXEEXT)
 @HAS_BITFORCE_TRUE@am__append_8 = driver-bitforce.c
 @HAS_HASHFAST_TRUE@am__append_9 = driver-hashfast.c driver-hashfast.h hf_protocol.h
 @HAS_BITFURY_TRUE@am__append_10 = driver-bitfury.c driver-bitfury.h
-@HAS_ICARUS_TRUE@am__append_11 = driver-icarus.c
-@HAS_KLONDIKE_TRUE@am__append_12 = driver-klondike.c
-@HAS_MODMINER_TRUE@am__append_13 = driver-modminer.c
+@HAS_GRIDSEED_TRUE@am__append_11 = driver-gridseed.c driver-gridseed.h
+@HAS_ICARUS_TRUE@am__append_12 = driver-icarus.c driver-gridseed.c driver-gridseed.h
+@HAS_KLONDIKE_TRUE@am__append_13 = driver-klondike.c
+@HAS_MODMINER_TRUE@am__append_14 = driver-modminer.c
 subdir = .
 DIST_COMMON = README $(am__configure_deps) \
 	$(am__dist_bitstreams_DATA_DIST) $(srcdir)/Makefile.am \
@@ -108,20 +109,20 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" \
 PROGRAMS = $(bin_PROGRAMS)
 am__cgminer_SOURCES_DIST = cgminer.c elist.h miner.h compat.h \
 	bench_block.h util.c util.h uthash.h logging.h sha2.c sha2.h \
-	api.c logging.c driver-opencl.h driver-opencl.c ocl.c ocl.h \
-	findnonce.c findnonce.h adl.c adl.h adl_functions.h *.cl \
-	scrypt.c scrypt.h fpgautils.c fpgautils.h usbutils.c \
+	api.c logging.c scrypt.c scrypt.h driver-opencl.h \
+	driver-opencl.c ocl.c ocl.h findnonce.c findnonce.h adl.c \
+	adl.h adl_functions.h *.cl fpgautils.c fpgautils.h usbutils.c \
 	usbutils.h driver-avalon.c driver-avalon.h \
 	driver-knc-spi-fpga.c driver-bflsc.c driver-bflsc.h \
 	driver-bitforce.c driver-hashfast.c driver-hashfast.h \
 	hf_protocol.h driver-bitfury.c driver-bitfury.h \
-	driver-icarus.c driver-klondike.c driver-modminer.c
-@HAS_OPENCL_TRUE@am__objects_1 = cgminer-driver-opencl.$(OBJEXT) \
+	driver-gridseed.c driver-gridseed.h driver-icarus.c \
+	driver-klondike.c driver-modminer.c
+@HAS_SCRYPT_TRUE@am__objects_1 = cgminer-scrypt.$(OBJEXT)
+@HAS_OPENCL_TRUE@am__objects_2 = cgminer-driver-opencl.$(OBJEXT) \
 @HAS_OPENCL_TRUE@	cgminer-ocl.$(OBJEXT) \
 @HAS_OPENCL_TRUE@	cgminer-findnonce.$(OBJEXT) \
 @HAS_OPENCL_TRUE@	cgminer-adl.$(OBJEXT)
-@HAS_OPENCL_TRUE@@HAS_SCRYPT_TRUE@am__objects_2 =  \
-@HAS_OPENCL_TRUE@@HAS_SCRYPT_TRUE@	cgminer-scrypt.$(OBJEXT)
 @NEED_FPGAUTILS_TRUE@am__objects_3 = cgminer-fpgautils.$(OBJEXT)
 @WANT_USBUTILS_TRUE@am__objects_4 = cgminer-usbutils.$(OBJEXT)
 @HAS_AVALON_TRUE@am__objects_5 = cgminer-driver-avalon.$(OBJEXT)
@@ -130,16 +131,18 @@ am__cgminer_SOURCES_DIST = cgminer.c elist.h miner.h compat.h \
 @HAS_BITFORCE_TRUE@am__objects_8 = cgminer-driver-bitforce.$(OBJEXT)
 @HAS_HASHFAST_TRUE@am__objects_9 = cgminer-driver-hashfast.$(OBJEXT)
 @HAS_BITFURY_TRUE@am__objects_10 = cgminer-driver-bitfury.$(OBJEXT)
-@HAS_ICARUS_TRUE@am__objects_11 = cgminer-driver-icarus.$(OBJEXT)
-@HAS_KLONDIKE_TRUE@am__objects_12 = cgminer-driver-klondike.$(OBJEXT)
-@HAS_MODMINER_TRUE@am__objects_13 = cgminer-driver-modminer.$(OBJEXT)
+@HAS_GRIDSEED_TRUE@am__objects_11 = cgminer-driver-gridseed.$(OBJEXT)
+@HAS_ICARUS_TRUE@am__objects_12 = cgminer-driver-icarus.$(OBJEXT) \
+@HAS_ICARUS_TRUE@	cgminer-driver-gridseed.$(OBJEXT)
+@HAS_KLONDIKE_TRUE@am__objects_13 = cgminer-driver-klondike.$(OBJEXT)
+@HAS_MODMINER_TRUE@am__objects_14 = cgminer-driver-modminer.$(OBJEXT)
 am_cgminer_OBJECTS = cgminer-cgminer.$(OBJEXT) cgminer-util.$(OBJEXT) \
 	cgminer-sha2.$(OBJEXT) cgminer-api.$(OBJEXT) \
 	cgminer-logging.$(OBJEXT) $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
 	$(am__objects_9) $(am__objects_10) $(am__objects_11) \
-	$(am__objects_12) $(am__objects_13)
+	$(am__objects_12) $(am__objects_13) $(am__objects_14)
 cgminer_OBJECTS = $(am_cgminer_OBJECTS)
 am__DEPENDENCIES_1 =
 cgminer_DEPENDENCIES = $(am__DEPENDENCIES_1) lib/libgnu.a \
@@ -569,7 +572,7 @@ cgminer_SOURCES := cgminer.c elist.h miner.h compat.h bench_block.h \
 	$(am__append_4) $(am__append_5) $(am__append_6) \
 	$(am__append_7) $(am__append_8) $(am__append_9) \
 	$(am__append_10) $(am__append_11) $(am__append_12) \
-	$(am__append_13)
+	$(am__append_13) $(am__append_14)
 @HAS_OPENCL_TRUE@bin_SCRIPTS = $(top_srcdir)/*.cl
 @HAS_MODMINER_TRUE@bitstreamsdir = $(bindir)/bitstreams
 @HAS_MODMINER_TRUE@dist_bitstreams_DATA = $(top_srcdir)/bitstreams/*
@@ -725,6 +728,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cgminer-driver-bflsc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cgminer-driver-bitforce.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cgminer-driver-bitfury.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cgminer-driver-gridseed.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cgminer-driver-hashfast.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cgminer-driver-icarus.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cgminer-driver-klondike.Po@am__quote@
@@ -834,6 +838,20 @@ cgminer-logging.obj: logging.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cgminer-logging.obj `if test -f 'logging.c'; then $(CYGPATH_W) 'logging.c'; else $(CYGPATH_W) '$(srcdir)/logging.c'; fi`
 
+cgminer-scrypt.o: scrypt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cgminer-scrypt.o -MD -MP -MF $(DEPDIR)/cgminer-scrypt.Tpo -c -o cgminer-scrypt.o `test -f 'scrypt.c' || echo '$(srcdir)/'`scrypt.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cgminer-scrypt.Tpo $(DEPDIR)/cgminer-scrypt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scrypt.c' object='cgminer-scrypt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cgminer-scrypt.o `test -f 'scrypt.c' || echo '$(srcdir)/'`scrypt.c
+
+cgminer-scrypt.obj: scrypt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cgminer-scrypt.obj -MD -MP -MF $(DEPDIR)/cgminer-scrypt.Tpo -c -o cgminer-scrypt.obj `if test -f 'scrypt.c'; then $(CYGPATH_W) 'scrypt.c'; else $(CYGPATH_W) '$(srcdir)/scrypt.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cgminer-scrypt.Tpo $(DEPDIR)/cgminer-scrypt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scrypt.c' object='cgminer-scrypt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cgminer-scrypt.obj `if test -f 'scrypt.c'; then $(CYGPATH_W) 'scrypt.c'; else $(CYGPATH_W) '$(srcdir)/scrypt.c'; fi`
+
 cgminer-driver-opencl.o: driver-opencl.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cgminer-driver-opencl.o -MD -MP -MF $(DEPDIR)/cgminer-driver-opencl.Tpo -c -o cgminer-driver-opencl.o `test -f 'driver-opencl.c' || echo '$(srcdir)/'`driver-opencl.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cgminer-driver-opencl.Tpo $(DEPDIR)/cgminer-driver-opencl.Po
@@ -889,20 +907,6 @@ cgminer-adl.obj: adl.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='adl.c' object='cgminer-adl.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cgminer-adl.obj `if test -f 'adl.c'; then $(CYGPATH_W) 'adl.c'; else $(CYGPATH_W) '$(srcdir)/adl.c'; fi`
-
-cgminer-scrypt.o: scrypt.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cgminer-scrypt.o -MD -MP -MF $(DEPDIR)/cgminer-scrypt.Tpo -c -o cgminer-scrypt.o `test -f 'scrypt.c' || echo '$(srcdir)/'`scrypt.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cgminer-scrypt.Tpo $(DEPDIR)/cgminer-scrypt.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scrypt.c' object='cgminer-scrypt.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cgminer-scrypt.o `test -f 'scrypt.c' || echo '$(srcdir)/'`scrypt.c
-
-cgminer-scrypt.obj: scrypt.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cgminer-scrypt.obj -MD -MP -MF $(DEPDIR)/cgminer-scrypt.Tpo -c -o cgminer-scrypt.obj `if test -f 'scrypt.c'; then $(CYGPATH_W) 'scrypt.c'; else $(CYGPATH_W) '$(srcdir)/scrypt.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cgminer-scrypt.Tpo $(DEPDIR)/cgminer-scrypt.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scrypt.c' object='cgminer-scrypt.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cgminer-scrypt.obj `if test -f 'scrypt.c'; then $(CYGPATH_W) 'scrypt.c'; else $(CYGPATH_W) '$(srcdir)/scrypt.c'; fi`
 
 cgminer-fpgautils.o: fpgautils.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cgminer-fpgautils.o -MD -MP -MF $(DEPDIR)/cgminer-fpgautils.Tpo -c -o cgminer-fpgautils.o `test -f 'fpgautils.c' || echo '$(srcdir)/'`fpgautils.c
@@ -1015,6 +1019,20 @@ cgminer-driver-bitfury.obj: driver-bitfury.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='driver-bitfury.c' object='cgminer-driver-bitfury.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cgminer-driver-bitfury.obj `if test -f 'driver-bitfury.c'; then $(CYGPATH_W) 'driver-bitfury.c'; else $(CYGPATH_W) '$(srcdir)/driver-bitfury.c'; fi`
+
+cgminer-driver-gridseed.o: driver-gridseed.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cgminer-driver-gridseed.o -MD -MP -MF $(DEPDIR)/cgminer-driver-gridseed.Tpo -c -o cgminer-driver-gridseed.o `test -f 'driver-gridseed.c' || echo '$(srcdir)/'`driver-gridseed.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cgminer-driver-gridseed.Tpo $(DEPDIR)/cgminer-driver-gridseed.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='driver-gridseed.c' object='cgminer-driver-gridseed.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cgminer-driver-gridseed.o `test -f 'driver-gridseed.c' || echo '$(srcdir)/'`driver-gridseed.c
+
+cgminer-driver-gridseed.obj: driver-gridseed.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cgminer-driver-gridseed.obj -MD -MP -MF $(DEPDIR)/cgminer-driver-gridseed.Tpo -c -o cgminer-driver-gridseed.obj `if test -f 'driver-gridseed.c'; then $(CYGPATH_W) 'driver-gridseed.c'; else $(CYGPATH_W) '$(srcdir)/driver-gridseed.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cgminer-driver-gridseed.Tpo $(DEPDIR)/cgminer-driver-gridseed.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='driver-gridseed.c' object='cgminer-driver-gridseed.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cgminer-driver-gridseed.obj `if test -f 'driver-gridseed.c'; then $(CYGPATH_W) 'driver-gridseed.c'; else $(CYGPATH_W) '$(srcdir)/driver-gridseed.c'; fi`
 
 cgminer-driver-icarus.o: driver-icarus.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cgminer_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cgminer-driver-icarus.o -MD -MP -MF $(DEPDIR)/cgminer-driver-icarus.Tpo -c -o cgminer-driver-icarus.o `test -f 'driver-icarus.c' || echo '$(srcdir)/'`driver-icarus.c
