@@ -20,3 +20,6 @@ If pll_r/pll_f/pll_od are specified, freq is ignored, and calculated as follows:
 * Fvco = int(Fref * (pll_f + 1))
 * Fout = int(Fvco / (1 << pll_od))
 * freq = Fout
+
+This version of cgminer turns off all BTC cores so that power usage is low.
+On a 5-chip USB miner, power usage is around 10 W. GPUs are also supported.
