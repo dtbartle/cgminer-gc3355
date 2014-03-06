@@ -50,6 +50,7 @@ typedef struct s_gridseed_info {
 	uint32_t	fw_version;
 	struct timeval	scanhash_time;
 	int		nonce_count[8];  // per chip
+	int		error_count[8];  // per chip
 	// options
 	int		baud;
 	int		freq;
@@ -611,6 +612,7 @@ static bool gridseed_detect_one(libusb_device *dev, struct usb_find_devices *fou
 	info->chips = GRIDSEED_DEFAULT_CHIPS;
 	info->voltage = 0;
 	memset(info->nonce_count, 0, sizeof(info->nonce_count));
+	memset(info->error_count, 0, sizeof(info->error_count));
 
 	get_options(gridseed, opt_gridseed_options, &info->baud,
 		&info->freq, info->freq_cmd, &info->chips, &info->voltage);
@@ -686,6 +688,8 @@ static void gridseed_get_statline(char *buf, size_t siz, struct cgpu_info *grids
 	tailsprintf(buf, siz, " N:");
 	for (i = 0; i < info->chips; ++i) {
 		tailsprintf(buf, siz, " %d", info->nonce_count[i]);
+		if (info->error_count[i])
+			tailsprintf(buf, siz, "[%d]", info->error_count[i]);
 	}
 }
 
@@ -718,7 +722,8 @@ static int64_t gridseed_scanhash(struct thr_info *thr, struct work *work, int64_
 			uint32_t nonce = le32toh(*(uint32_t *)(buf+4));
 			uint32_t chip = nonce / ((uint32_t)0xffffffff / info->chips);
 			info->nonce_count[chip]++;
-			submit_nonce(thr, work, nonce);
+			if (!submit_nonce(thr, work, nonce))
+				info->error_count[chip]++;
 		} else {
 			applog(LOG_ERR, "Unrecognized response from %i", gridseed->device_id);
 			return -1;
