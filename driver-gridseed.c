@@ -49,6 +49,7 @@ typedef struct s_gridseed_info {
 	enum sub_ident	ident;
 	uint32_t	fw_version;
 	struct timeval	scanhash_time;
+	int		nonce_count[8];  // per chip
 	// options
 	int		baud;
 	int		freq;
@@ -373,6 +374,7 @@ another:
 	}
 	else if (strcasecmp(p, "chips")==0) {
 		*chips = (tmp != 0) ? tmp : *chips;
+		*chips = MAX(0, MIN(8, *chips));
 	}
 	else if (strcasecmp(p, "voltage")==0) {
 		*voltage = (tmp != 0) ? tmp : *voltage;
@@ -608,6 +610,7 @@ static bool gridseed_detect_one(libusb_device *dev, struct usb_find_devices *fou
 	memcpy(info->freq_cmd, bin_frequency[def_freq_inx], 8);
 	info->chips = GRIDSEED_DEFAULT_CHIPS;
 	info->voltage = 0;
+	memset(info->nonce_count, 0, sizeof(info->nonce_count));
 
 	get_options(gridseed, opt_gridseed_options, &info->baud,
 		&info->freq, info->freq_cmd, &info->chips, &info->voltage);
@@ -677,9 +680,18 @@ static void gridseed_detect(bool __maybe_unused hotplug)
 	usb_detect(&gridseed_drv, gridseed_detect_one);
 }
 
+static void gridseed_get_statline(char *buf, size_t siz, struct cgpu_info *gridseed) {
+	GRIDSEED_INFO *info = gridseed->device_data;
+	int i;
+	tailsprintf(buf, siz, " N:");
+	for (i = 0; i < info->chips; ++i) {
+		tailsprintf(buf, siz, " %d", info->nonce_count[i]);
+	}
+}
+
 static void gridseed_get_statline_before(char *buf, size_t siz, struct cgpu_info *gridseed) {
 	GRIDSEED_INFO *info = gridseed->device_data;
-	tailsprintf(buf, siz, "%4d MHz | ", info->freq);
+	tailsprintf(buf, siz, "%4d MHz |", info->freq);
 }
 
 static bool gridseed_prepare_work(struct thr_info __maybe_unused *thr, struct work *work) {
@@ -704,6 +716,8 @@ static int64_t gridseed_scanhash(struct thr_info *thr, struct work *work, int64_
 	while (!thr->work_restart && (ret = gc3355_get_data(gridseed, buf, GRIDSEED_READ_SIZE)) == 0) {
 		if (buf[0] == 0x55 || buf[1] == 0x20) {
 			uint32_t nonce = le32toh(*(uint32_t *)(buf+4));
+			uint32_t chip = nonce / ((uint32_t)0xffffffff / info->chips);
+			info->nonce_count[chip]++;
 			submit_nonce(thr, work, nonce);
 		} else {
 			applog(LOG_ERR, "Unrecognized response from %i", gridseed->device_id);
@@ -726,6 +740,7 @@ struct device_drv gridseed_drv = {
 	.dname = "gridseed",
 	.name = "GSD",
 	.drv_detect = gridseed_detect,
+	.get_statline = gridseed_get_statline,
 	.get_statline_before = gridseed_get_statline_before,
 	.prepare_work = gridseed_prepare_work,
 	.scanhash = gridseed_scanhash,
