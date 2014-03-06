@@ -695,7 +695,7 @@ static void gridseed_get_statline(char *buf, size_t siz, struct cgpu_info *grids
 
 static void gridseed_get_statline_before(char *buf, size_t siz, struct cgpu_info *gridseed) {
 	GRIDSEED_INFO *info = gridseed->device_data;
-	tailsprintf(buf, siz, "%4d MHz |", info->freq);
+	tailsprintf(buf, siz, "%4d MHz | ", info->freq);
 }
 
 static bool gridseed_prepare_work(struct thr_info __maybe_unused *thr, struct work *work) {
