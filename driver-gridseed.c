@@ -57,6 +57,7 @@ typedef struct s_gridseed_info {
 	unsigned char	freq_cmd[8];
 	int		chips; //chips per module
 	int		voltage;
+	int		per_chip_stats;
 } GRIDSEED_INFO;
 
 /* commands to set core frequency */
@@ -327,8 +328,7 @@ static void gc3355_init(struct cgpu_info *gridseed, GRIDSEED_INFO *info)
 		gc3355_increase_voltage(gridseed);
 }
 
-static bool get_options(struct cgpu_info *gridseed, char *options, int *baud,
-		int *freq, char freq_cmd[8], int *chips, int *voltage)
+static bool get_options(GRIDSEED_INFO *info, char *options)
 {
 	unsigned char *ss, *p, *end, *comma, *colon;
 	int tmp, pll_r = 0, pll_f = 0, pll_od = 0;
@@ -352,13 +352,13 @@ another:
 
 	tmp = atoi(colon+1);
 	if (strcasecmp(p, "baud")==0) {
-		*baud = (tmp != 0) ? tmp : *baud;
+		info->baud = (tmp != 0) ? tmp : info->baud;
 	}
 	else if (strcasecmp(p, "freq")==0) {
 		int i;
 		for(i=0; opt_frequency[i] != -1; i++) {
 			if (tmp == opt_frequency[i])
-				*freq = tmp;
+				info->freq = tmp;
 		}
 	}
 	else if (strcasecmp(p, "pll_r")==0) {
@@ -374,11 +374,14 @@ another:
 		pll_od = MAX(0, MIN(4, pll_od));
 	}
 	else if (strcasecmp(p, "chips")==0) {
-		*chips = (tmp != 0) ? tmp : *chips;
-		*chips = MAX(0, MIN(8, *chips));
+		info->chips = (tmp != 0) ? tmp : info->chips;
+		info->chips = MAX(0, MIN(8, info->chips));
 	}
 	else if (strcasecmp(p, "voltage")==0) {
-		*voltage = (tmp != 0) ? tmp : *voltage;
+		info->voltage = (tmp != 0) ? tmp : info->voltage;
+	}
+	else if (strcasecmp(p, "per_chip_stats")==0) {
+		info->per_chip_stats = (tmp != 0) ? tmp : info->per_chip_stats;
 	}
 
 next:
@@ -397,13 +400,13 @@ next:
 		int cfg_pm = 1, pll_clk_gate = 1;
 		uint32_t cmd = (cfg_pm << 0) | (pll_clk_gate << 2) | (pll_r << 16) |
 			(pll_f << 21) | (pll_od << 28) | (pll_bs << 31);
-		*freq = f_out;
-		memcpy(freq_cmd, "\x55\xaa\xef\x00", 4);
-		*(uint32_t *)(freq_cmd + 4) = htole32(cmd);
+		info->freq = f_out;
+		memcpy(info->freq_cmd, "\x55\xaa\xef\x00", 4);
+		*(uint32_t *)(info->freq_cmd + 4) = htole32(cmd);
 	} else {
-		int freq_idx = gc3355_find_freq_index(*freq);
-		*freq = opt_frequency[freq_idx];
-		memcpy(freq_cmd, bin_frequency[freq_idx], 8);
+		int freq_idx = gc3355_find_freq_index(info->freq);
+		info->freq = opt_frequency[freq_idx];
+		memcpy(info->freq_cmd, bin_frequency[freq_idx], 8);
 	}
 
 	return true;
@@ -611,11 +614,11 @@ static bool gridseed_detect_one(libusb_device *dev, struct usb_find_devices *fou
 	memcpy(info->freq_cmd, bin_frequency[def_freq_inx], 8);
 	info->chips = GRIDSEED_DEFAULT_CHIPS;
 	info->voltage = 0;
+	info->per_chip_stats = 0;
 	memset(info->nonce_count, 0, sizeof(info->nonce_count));
 	memset(info->error_count, 0, sizeof(info->error_count));
 
-	get_options(gridseed, opt_gridseed_options, &info->baud,
-		&info->freq, info->freq_cmd, &info->chips, &info->voltage);
+	get_options(info, opt_gridseed_options);
 
 	update_usb_stats(gridseed);
 
@@ -684,12 +687,14 @@ static void gridseed_detect(bool __maybe_unused hotplug)
 
 static void gridseed_get_statline(char *buf, size_t siz, struct cgpu_info *gridseed) {
 	GRIDSEED_INFO *info = gridseed->device_data;
-	int i;
-	tailsprintf(buf, siz, " N:");
-	for (i = 0; i < info->chips; ++i) {
-		tailsprintf(buf, siz, " %d", info->nonce_count[i]);
-		if (info->error_count[i])
-			tailsprintf(buf, siz, "[%d]", info->error_count[i]);
+	if (info->per_chip_stats) {
+		int i;
+		tailsprintf(buf, siz, " N:");
+		for (i = 0; i < info->chips; ++i) {
+			tailsprintf(buf, siz, " %d", info->nonce_count[i]);
+			if (info->error_count[i])
+				tailsprintf(buf, siz, "[%d]", info->error_count[i]);
+		}
 	}
 }
 

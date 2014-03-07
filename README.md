@@ -13,6 +13,7 @@ sub-options:
 * freq - a choice of 250/400/450/500/550/600/650/700/750/800/850/900/950/1000
 * pll_r, pll_f, pll_od - fine-grained frequency tuning; see below
 * chips - number of chips per device (default 5)
+* per_chip_stats - print per-chip nonce generations and hardware failures
 
 If pll_r/pll_f/pll_od are specified, freq is ignored, and calculated as follows:
 * Fin = 25
