@@ -118,7 +118,7 @@ unsigned long global_quota_gcd = 1;
 int nDevs;
 #endif
 #ifdef USE_SCRYPT
-bool opt_scrypt;
+bool opt_scrypt = true;
 #endif
 #ifdef HAVE_OPENCL
 int opt_dynamic_interval = 7;
