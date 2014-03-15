@@ -330,7 +330,7 @@ static void gc3355_init(struct cgpu_info *gridseed, GRIDSEED_INFO *info)
 
 static bool get_options(GRIDSEED_INFO *info, char *options)
 {
-	unsigned char *ss, *p, *end, *comma, *colon;
+	char *ss, *p, *end, *comma, *colon;
 	int tmp, pll_r = 0, pll_f = 0, pll_od = 0;
 
 	if (options == NULL)
@@ -532,7 +532,7 @@ static int gridseed_pl2303_init(struct cgpu_info *gridseed, int interface)
 			 interface, C_SETDATA);
 
 	if (gridseed->usbinfo.nodev)
-		return;
+		return -1;
 
 	// Set Line Control
 	uint32_t ica_data[2] = { PL2303_VALUE_LINE0, PL2303_VALUE_LINE1 };
@@ -540,11 +540,13 @@ static int gridseed_pl2303_init(struct cgpu_info *gridseed, int interface)
 			 interface, &ica_data[0], PL2303_VALUE_LINE_SIZE, C_SETLINE);
 
 	if (gridseed->usbinfo.nodev)
-		return;
+		return -1;
 
 	// Vendor
 	transfer(gridseed, PL2303_VENDOR_OUT, PL2303_REQUEST_VENDOR, PL2303_VALUE_VENDOR,
 			 interface, C_VENDOR);
+
+	return 0;
 }
 
 static void gridseed_initialise(struct cgpu_info *gridseed, GRIDSEED_INFO *info)
