@@ -176,6 +176,7 @@ char *opt_bitburner_fury_options = NULL;
 #endif
 #ifdef USE_GRIDSEED
 char *opt_gridseed_options = NULL;
+char *opt_gridseed_freq = NULL;
 #endif
 #ifdef USE_KLONDIKE
 char *opt_klondike_options = NULL;
@@ -1033,6 +1034,12 @@ static char *set_gridseed_options(const char *arg)
 
 	return NULL;
 }
+static char *set_gridseed_freq(const char *arg)
+{
+        opt_set_charp(arg, &opt_gridseed_freq);
+
+        return NULL;
+}
 #endif
 
 #ifdef USE_ICARUS
@@ -1255,6 +1262,9 @@ static struct opt_table opt_config_table[] = {
 	OPT_WITH_ARG("--gridseed-options",
 		     set_gridseed_options, NULL, NULL,
 		     opt_hidden),
+        OPT_WITH_ARG("--gridseed-freq",
+                     set_gridseed_freq, NULL, NULL,
+                     opt_hidden),
 #endif
 #ifdef USE_ICARUS
 	OPT_WITH_ARG("--icarus-options",

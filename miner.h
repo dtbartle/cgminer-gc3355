@@ -1046,6 +1046,7 @@ extern char *opt_bitburner_fury_options;
 #endif
 #ifdef USE_GRIDSEED
 extern char *opt_gridseed_options;
+extern char *opt_gridseed_freq;
 #endif
 #ifdef USE_KLONDIKE
 extern char *opt_klondike_options;
