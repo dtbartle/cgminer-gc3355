@@ -249,7 +249,7 @@ static void gc3355_set_core_freq(struct cgpu_info *gridseed)
 	applog(LOG_NOTICE, "Set GC3355 core frequency to %d MHz", info->freq);
 }
 
-static void gc3355_increase_voltage(struct cgpu_info *gridseed) {
+static void gc3355_switch_voltage(struct cgpu_info *gridseed) {
 	uint32_t reg_value;
 
 	// Put GPIOA pin 5 into general function, 50 MHz output.
@@ -269,11 +269,11 @@ static void gc3355_increase_voltage(struct cgpu_info *gridseed) {
 		return;
 	}
 	reg_value |= 0x00000020;
-	//reg_value &= 0xFFFFFFDF;
 	if (!gc3355_write_register(gridseed, GRIDSEED_GPIOA_BASE + GRIDSEED_ODR_OFFSET, reg_value)) {
 		applog(LOG_DEBUG, "Failed to write GPIOA ODR register from %i", gridseed->device_id);
 		return;
 	}
+	applog(LOG_NOTICE, "Switched GC3355 voltage to alternate voltage");
 }
 
 static void gc3355_init(struct cgpu_info *gridseed, GRIDSEED_INFO *info)
@@ -290,7 +290,7 @@ static void gc3355_init(struct cgpu_info *gridseed, GRIDSEED_INFO *info)
 	gc3355_send_cmds(gridseed, str_ltc_reset);
 	gc3355_set_core_freq(gridseed);
 	if (info->voltage)
-		gc3355_increase_voltage(gridseed);
+		gc3355_switch_voltage(gridseed);
 }
 
 static bool get_options(GRIDSEED_INFO *info, char *options)
