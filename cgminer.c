@@ -4640,6 +4640,10 @@ void write_config(FILE *fcfg)
 	if (opt_klondike_options)
 		fprintf(fcfg, ",\n\"klondike-options\" : \"%s\"", json_escape(opt_icarus_options));
 #endif
+#ifdef USE_GRIDSEED
+	if (opt_gridseed_options)
+		fprintf(fcfg, ",\n\"gridseed-options\" : \"%s\"", json_escape(opt_gridseed_options));
+#endif
 #ifdef USE_USBUTILS
 	if (opt_usb_select)
 		fprintf(fcfg, ",\n\"usb\" : \"%s\"", json_escape(opt_usb_select));
