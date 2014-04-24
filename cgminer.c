@@ -166,6 +166,7 @@ int opt_api_mcast_port = 4028;
 bool opt_api_network;
 bool opt_delaynet;
 bool opt_disable_pool;
+bool opt_extranonce_subscribe = true;
 static bool no_work;
 char *opt_icarus_options = NULL;
 char *opt_icarus_timing = NULL;
@@ -1337,6 +1338,9 @@ static struct opt_table opt_config_table[] = {
 	OPT_WITHOUT_ARG("--no-submit-stale",
 			opt_set_invbool, &opt_submit_stale,
 		        "Don't submit shares if they are detected as stale"),
+	OPT_WITHOUT_ARG("--no-extranonce-subscribe",
+			opt_set_invbool, &opt_extranonce_subscribe,
+			"Disable 'extranonce' stratum subscribe"),
 	OPT_WITH_ARG("--pass|-p",
 		     set_pass, NULL, NULL,
 		     "Password for bitcoin JSON-RPC server"),
@@ -5327,7 +5331,7 @@ static bool parse_stratum_response(struct pool *pool, char *s)
 	if (err_val && !json_is_null(err_val))  {
 		char *ss;
 		ss = (char *)json_string_value(json_array_get(err_val, 1));
-		if (strcmp(ss, "Method 'subscribe' not found for service 'mining.extranonce'") == 0) {
+		if (opt_extranonce_subscribe && strcmp(ss, "Method 'subscribe' not found for service 'mining.extranonce'") == 0) {
 			applog(LOG_INFO, "Cannot subscribe to mining.extranonce on %s", pool->poolname);
 			goto out;
 		}
@@ -5790,7 +5794,7 @@ retry_stratum:
 		bool init = pool_tset(pool, &pool->stratum_init);
 
 		if (!init) {
-			bool ret = initiate_stratum(pool) && auth_stratum(pool) && subscribe_extranonce(pool);
+			bool ret = initiate_stratum(pool) && auth_stratum(pool) && (!opt_extranonce_subscribe || subscribe_extranonce(pool));
 
 			if (ret)
 				init_stratum_threads(pool);
