@@ -1665,6 +1665,48 @@ static bool parse_diff(struct pool *pool, json_t *val)
 	return true;
 }
 
+static bool parse_extranonce(struct pool *pool, json_t *val)
+{
+	char s[RBUFSIZE], *nonce1;
+	int n2size;
+	int id = json_integer_value(json_object_get(val, "id"));
+	json_t *params = json_object_get(val, "params");
+
+	if (!id)
+		return false;
+
+	nonce1 = json_array_string(params, 0);
+	if (!nonce1) {
+//		applog(LOG_INFO, "Failed to get nonce1 in ");
+		return false;
+	}
+	n2size = json_integer_value(json_array_get(params, 1));
+	if (!n2size) {
+//		applog(LOG_INFO, "Failed to get n2size in ");
+		free(nonce1);
+		return false;
+	}
+
+	cg_wlock(&pool->data_lock);
+	pool->nonce1 = nonce1;
+	pool->n1_len = strlen(nonce1) / 2;
+	free(pool->nonce1bin);
+	pool->nonce1bin = (unsigned char *)calloc(pool->n1_len, 1);
+	if (unlikely(!pool->nonce1bin))
+		quithere(1, "Failed to calloc pool->nonce1bin");
+	hex2bin(pool->nonce1bin, pool->nonce1, pool->n1_len);
+	pool->n2size = n2size;
+	cg_wunlock(&pool->data_lock);
+
+	sprintf(s, "{\"id\": %d, \"result\": \"true\", \"error\": null}", id);
+	if (!stratum_send(pool, s, strlen(s)))
+		return false;
+
+	applog(LOG_NOTICE, "%s coin change requested", pool->poolname);
+
+	return true;
+}
+
 static bool parse_reconnect(struct pool *pool, json_t *val)
 {
 	char *url, *port, address[256];
@@ -1772,6 +1814,12 @@ bool parse_method(struct pool *pool, char *s)
 
 	if (!strncasecmp(buf, "mining.set_difficulty", 21) && parse_diff(pool, params)) {
 		ret = true;
+		return ret;
+	}
+
+	if (!strncasecmp(buf, "mining.set_extranonce", 21) && parse_extranonce(pool, val)) {
+		ret = true;
+		json_decref(val);
 		return ret;
 	}
 
