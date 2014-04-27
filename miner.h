@@ -1276,6 +1276,7 @@ struct stratum_work {
 struct pool {
 	int pool_no;
 	int prio;
+	bool extranonce_subscribe;
 	int accepted, rejected;
 	int seq_rejects;
 	int seq_getfails;
