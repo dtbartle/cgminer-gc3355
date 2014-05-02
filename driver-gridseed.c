@@ -546,7 +546,7 @@ static bool gridseed_detect_one(libusb_device *dev, struct usb_find_devices *fou
 {
 	struct cgpu_info *gridseed;
 	GRIDSEED_INFO *info;
-	int err, wrote;
+	int err;
 	unsigned char rbuf[GRIDSEED_READ_SIZE];
 #if 0
 	const char detect_cmd[] =
