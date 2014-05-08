@@ -1691,7 +1691,7 @@ static bool parse_extranonce(struct pool *pool, json_t *val)
 	pool->n2size = n2size;
 	cg_wunlock(&pool->data_lock);
 
-	applog(LOG_NOTICE, "%s extranonce change requested", pool->poolname);
+	applog(LOG_NOTICE, "Extranonce change requested by pool %d", pool->pool_no);
 
 	return true;
 }
@@ -1873,12 +1873,12 @@ bool subscribe_extranonce(struct pool *pool)
 			if (!ss)
 				ss = (char *)json_string_value(err_val);
 			if (ss && (strcmp(ss, "Method 'subscribe' not found for service 'mining.extranonce'") == 0)) {
-				applog(LOG_INFO, "Cannot subscribe to mining.extranonce on %s", pool->poolname);
+				applog(LOG_INFO, "Cannot subscribe to mining.extranonce on pool %d", pool->pool_no);
 				ret = true;
 				goto out;
 			}
 			if (ss && (strcmp(ss, "Unrecognized request provided") == 0)) {
-				applog(LOG_INFO, "Cannot subscribe to mining.extranonce on %s", pool->poolname);
+				applog(LOG_INFO, "Cannot subscribe to mining.extranonce on pool %d", pool->pool_no);
 				ret = true;
 				goto out;
 			}
@@ -1886,14 +1886,15 @@ bool subscribe_extranonce(struct pool *pool)
 		}
 		else
 			ss = strdup("(unknown reason)");
-		applog(LOG_INFO, "%s JSON stratum auth failed: %s", pool->poolname, ss);
+		
+		applog(LOG_INFO, "Pool %d JSON stratum auth failed: %s", pool->pool_no, ss);
 		free(ss);
 
 		goto out;
 	}
 
 	ret = true;
-	applog(LOG_INFO, "Stratum extranonce subscribe for %s", pool->poolname);
+	applog(LOG_INFO, "Stratum extranonce subscribe for pool %d", pool->pool_no);
 
 out:
 	json_decref(val);
