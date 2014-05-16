@@ -42,6 +42,7 @@ typedef struct s_gridseed_info {
 	struct timeval	scanhash_time;
 	int		nonce_count[GRIDSEED_MAX_CHIPS];  // per chip
 	int		error_count[GRIDSEED_MAX_CHIPS];  // per chip
+	char		*serial;
 	// options
 	int		baud;
 	int		freq;
