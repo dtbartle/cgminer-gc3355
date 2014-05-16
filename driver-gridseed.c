@@ -45,21 +45,6 @@
 
 static const char *gridseed_version = "v3.8.5.20140210.02";
 
-typedef struct s_gridseed_info {
-	enum sub_ident	ident;
-	uint32_t	fw_version;
-	struct timeval	scanhash_time;
-	int		nonce_count[GRIDSEED_MAX_CHIPS];  // per chip
-	int		error_count[GRIDSEED_MAX_CHIPS];  // per chip
-	// options
-	int		baud;
-	int		freq;
-	unsigned char	freq_cmd[8];
-	int		chips; //chips per module
-	int		voltage;
-	int		per_chip_stats;
-} GRIDSEED_INFO;
-
 static const char *str_reset[] = {
 	"55AAC000808080800000000001000000", // Chip reset
 	NULL
