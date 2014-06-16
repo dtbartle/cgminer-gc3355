@@ -234,6 +234,23 @@ static void gc3355_set_core_freq(struct cgpu_info *gridseed)
 	applog(LOG_NOTICE, "Set GC3355 core frequency to %d MHz", info->freq);
 }
 
+static void gc3355_switch_leds(struct cgpu_info *gridseed) {
+	uint32_t reg_value;
+
+	// Set GPIOB pins 0 and 1 as general purpose output, open-drain, 50 MHz max
+	if (!gc3355_read_register(gridseed, GRIDSEED_GPIOB_BASE + GRIDSEED_CRL_OFFSET, &reg_value)) {
+		applog(LOG_DEBUG, "Failed to read GPIOA CRL register from %i", gridseed->device_id);
+		return;
+	}
+	reg_value = (reg_value & 0xffffff00) | 0x00000077;
+	if (!gc3355_write_register(gridseed, GRIDSEED_GPIOB_BASE + GRIDSEED_CRL_OFFSET, reg_value)) {
+		applog(LOG_DEBUG, "Failed to write GPIOA CRL register from %i", gridseed->device_id);
+		return;
+	}
+
+	applog(LOG_NOTICE, "Turned off GC3355 LEDs");
+}
+
 static void gc3355_switch_voltage(struct cgpu_info *gridseed) {
 	uint32_t reg_value;
 
@@ -276,6 +293,8 @@ static void gc3355_init(struct cgpu_info *gridseed, GRIDSEED_INFO *info)
 	gc3355_set_core_freq(gridseed);
 	if (info->voltage)
 		gc3355_switch_voltage(gridseed);
+	if (info->led)
+		gc3355_switch_leds(gridseed);
 }
 
 static bool get_options(GRIDSEED_INFO *info, char *options)
@@ -328,6 +347,9 @@ another:
 	}
 	else if (strcasecmp(p, "per_chip_stats")==0) {
 		info->per_chip_stats = (tmp != 0) ? tmp : info->per_chip_stats;
+	}
+	else if (strcasecmp(p, "led")==0) {
+		info->led = (tmp != 0) ? tmp : info->led;
 	}
 
 next:
@@ -600,6 +622,7 @@ static bool gridseed_detect_one(libusb_device *dev, struct usb_find_devices *fou
 	info->chips = GRIDSEED_DEFAULT_CHIPS;
 	info->voltage = 0;
 	info->per_chip_stats = 0;
+	info->led = 0;
 	info->serial = strdup(gridseed->usbdev->serial_string);
 	memset(info->nonce_count, 0, sizeof(info->nonce_count));
 	memset(info->error_count, 0, sizeof(info->error_count));

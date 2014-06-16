@@ -26,6 +26,7 @@
 #define GRIDSEED_PERIPH_BASE		((uint32_t)0x40000000)
 #define GRIDSEED_APB2PERIPH_BASE	(GRIDSEED_PERIPH_BASE + 0x10000)
 #define GRIDSEED_GPIOA_BASE		(GRIDSEED_APB2PERIPH_BASE + 0x0800)
+#define GRIDSEED_GPIOB_BASE		(GRIDSEED_APB2PERIPH_BASE + 0x0c00)
 #define GRIDSEED_CRL_OFFSET		0x00
 #define GRIDSEED_ODR_OFFSET		0x0c
 
@@ -50,6 +51,7 @@ typedef struct s_gridseed_info {
 	int		chips; //chips per module
 	int		voltage;
 	int		per_chip_stats;
+	int		led;
 } GRIDSEED_INFO;
 
 #endif /* INCLUDE_DRIVER_GRIDSEED_H */
