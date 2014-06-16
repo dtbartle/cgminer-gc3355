@@ -45,21 +45,6 @@
 
 static const char *gridseed_version = "v3.8.5.20140210.02";
 
-typedef struct s_gridseed_info {
-	enum sub_ident	ident;
-	uint32_t	fw_version;
-	struct timeval	scanhash_time;
-	int		nonce_count[GRIDSEED_MAX_CHIPS];  // per chip
-	int		error_count[GRIDSEED_MAX_CHIPS];  // per chip
-	// options
-	int		baud;
-	int		freq;
-	unsigned char	freq_cmd[8];
-	int		chips; //chips per module
-	int		voltage;
-	int		per_chip_stats;
-} GRIDSEED_INFO;
-
 static const char *str_reset[] = {
 	"55AAC000808080800000000001000000", // Chip reset
 	NULL
@@ -249,6 +234,23 @@ static void gc3355_set_core_freq(struct cgpu_info *gridseed)
 	applog(LOG_NOTICE, "Set GC3355 core frequency to %d MHz", info->freq);
 }
 
+static void gc3355_switch_leds(struct cgpu_info *gridseed) {
+	uint32_t reg_value;
+
+	// Set GPIOB pins 0 and 1 as general purpose output, open-drain, 50 MHz max
+	if (!gc3355_read_register(gridseed, GRIDSEED_GPIOB_BASE + GRIDSEED_CRL_OFFSET, &reg_value)) {
+		applog(LOG_DEBUG, "Failed to read GPIOA CRL register from %i", gridseed->device_id);
+		return;
+	}
+	reg_value = (reg_value & 0xffffff00) | 0x00000077;
+	if (!gc3355_write_register(gridseed, GRIDSEED_GPIOB_BASE + GRIDSEED_CRL_OFFSET, reg_value)) {
+		applog(LOG_DEBUG, "Failed to write GPIOA CRL register from %i", gridseed->device_id);
+		return;
+	}
+
+	applog(LOG_NOTICE, "Turned off GC3355 LEDs");
+}
+
 static void gc3355_switch_voltage(struct cgpu_info *gridseed) {
 	uint32_t reg_value;
 
@@ -291,6 +293,8 @@ static void gc3355_init(struct cgpu_info *gridseed, GRIDSEED_INFO *info)
 	gc3355_set_core_freq(gridseed);
 	if (info->voltage)
 		gc3355_switch_voltage(gridseed);
+	if (info->led)
+		gc3355_switch_leds(gridseed);
 }
 
 static bool get_options(GRIDSEED_INFO *info, char *options)
@@ -344,6 +348,9 @@ another:
 	else if (strcasecmp(p, "per_chip_stats")==0) {
 		info->per_chip_stats = (tmp != 0) ? tmp : info->per_chip_stats;
 	}
+	else if (strcasecmp(p, "led")==0) {
+		info->led = (tmp != 0) ? tmp : info->led;
+	}
 
 next:
 	if (comma != NULL) {
@@ -369,6 +376,45 @@ next:
 	info->freq = f_out;
 	memcpy(info->freq_cmd, "\x55\xaa\xef\x00", 4);
 	*(uint32_t *)(info->freq_cmd + 4) = htole32(cmd);
+
+	return true;
+}
+
+static bool get_freq(GRIDSEED_INFO *info, char *options)
+{
+	char *ss, *p, *end, *comma, *colon;
+	int tmp;
+
+	if (options == NULL)
+		return false;
+
+	applog(LOG_NOTICE, "GridSeed freq options: '%s'", options);
+	ss = strdup(options);
+	p = ss;
+	end = p + strlen(p);
+
+another:
+	comma = strchr(p, ',');
+	if (comma != NULL)
+		*comma = '\0';
+	colon = strchr(p, '=');
+	if (colon == NULL)
+		goto next;
+	*colon = '\0';
+
+	tmp = atoi(colon+1);
+	if (strcasecmp(p, info->serial)==0) {
+		applog(LOG_NOTICE, "%s unique frequency: %i", p, tmp);
+		info->freq = tmp;
+	}
+
+next:
+	if (comma != NULL) {
+		p = comma + 1;
+		if (p < end)
+			goto another;
+	}
+	free(ss);
 
 	return true;
 }
@@ -576,11 +622,13 @@ static bool gridseed_detect_one(libusb_device *dev, struct usb_find_devices *fou
 	info->chips = GRIDSEED_DEFAULT_CHIPS;
 	info->voltage = 0;
 	info->per_chip_stats = 0;
+	info->led = 0;
+	info->serial = strdup(gridseed->usbdev->serial_string);
 	memset(info->nonce_count, 0, sizeof(info->nonce_count));
 	memset(info->error_count, 0, sizeof(info->error_count));
 
 	get_options(info, opt_gridseed_options);
-
+	get_freq(info, opt_gridseed_freq);
 	update_usb_stats(gridseed);
 
 	gridseed->usbdev->usb_type = USB_TYPE_STD;

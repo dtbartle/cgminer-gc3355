@@ -28,6 +28,9 @@
 #include "compat.h"
 #include "miner.h"
 #include "util.h"
+#ifdef USE_GRIDSEED
+#include "driver-gridseed.h"
+#endif
 
 #if defined(USE_BFLSC) || defined(USE_AVALON) || defined(USE_HASHFAST) || defined(USE_BITFURY) || defined(USE_KLONDIKE) || defined(USE_KNC) || defined(USE_GRIDSEED)
 #define HAVE_AN_ASIC 1
@@ -2102,6 +2105,18 @@ static void ascstatus(struct io_data *io_data, int asc, bool isjson, bool precom
 		root = api_add_int(root, "Last Share Pool", &last_share_pool, false);
 		root = api_add_time(root, "Last Share Time", &(cgpu->last_share_pool_time), false);
 		root = api_add_mhtotal(root, "Total MH", &(cgpu->total_mhashes), false);
+#ifdef USE_GRIDSEED
+		GRIDSEED_INFO *info = cgpu->device_data;
+		double frequency = 0;
+		float voltage = 0;
+		if (cgpu->drv->drv_id == DRIVER_gridseed) {
+			frequency = info->freq;
+			voltage = info->voltage;
+			root = api_add_string(root, "Serial", cgpu->usbdev->serial_string, false);
+			root = api_add_freq(root, "Frequency", &frequency, false);
+			root = api_add_volts(root, "Voltage", &voltage, false);
+		}
+#endif
 		root = api_add_int(root, "Diff1 Work", &(cgpu->diff1), false);
 		root = api_add_diff(root, "Difficulty Accepted", &(cgpu->diff_accepted), false);
 		root = api_add_diff(root, "Difficulty Rejected", &(cgpu->diff_rejected), false);

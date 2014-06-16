@@ -176,6 +176,7 @@ char *opt_bitburner_fury_options = NULL;
 #endif
 #ifdef USE_GRIDSEED
 char *opt_gridseed_options = NULL;
+char *opt_gridseed_freq = NULL;
 #endif
 #ifdef USE_KLONDIKE
 char *opt_klondike_options = NULL;
@@ -1049,6 +1050,12 @@ static char *set_gridseed_options(const char *arg)
 
 	return NULL;
 }
+static char *set_gridseed_freq(const char *arg)
+{
+	opt_set_charp(arg, &opt_gridseed_freq);
+
+	return NULL;
+}
 #endif
 
 #ifdef USE_ICARUS
@@ -1271,6 +1278,9 @@ static struct opt_table opt_config_table[] = {
 	OPT_WITH_ARG("--gridseed-options",
 		     set_gridseed_options, NULL, NULL,
 		     opt_hidden),
+	OPT_WITH_ARG("--gridseed-freq",
+		    set_gridseed_freq, NULL, NULL,
+		    opt_hidden),
 #endif
 #ifdef USE_ICARUS
 	OPT_WITH_ARG("--icarus-options",
@@ -4667,6 +4677,8 @@ void write_config(FILE *fcfg)
 #ifdef USE_GRIDSEED
 	if (opt_gridseed_options)
 		fprintf(fcfg, ",\n\"gridseed-options\" : \"%s\"", json_escape(opt_gridseed_options));
+	if (opt_gridseed_freq)
+		fprintf(fcfg, ",\n\"gridseed-freq\" : \"%s\"", json_escape(opt_gridseed_freq));
 #endif
 #ifdef USE_USBUTILS
 	if (opt_usb_select)
@@ -7142,11 +7154,11 @@ static void *watchpool_thread(void __maybe_unused *userdata)
 			}
 
 			/* Only switch pools if the failback pool has been
-			 * alive for more than 5 minutes to prevent
+			 * alive for more than one minute to prevent
 			 * intermittently failing pools from being used. */
 			if (!pool->idle && pool_strategy == POOL_FAILOVER && pool->prio < cp_prio() &&
-			    now.tv_sec - pool->tv_idle.tv_sec > 300) {
-				applog(LOG_WARNING, "Pool %d %s stable for 5 mins",
+			    now.tv_sec - pool->tv_idle.tv_sec > 60) {
+				applog(LOG_WARNING, "Pool %d %s stable for 1 minute",
 				       pool->pool_no, pool->rpc_url);
 				switch_pools(NULL);
 			}
