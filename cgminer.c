@@ -7451,7 +7451,7 @@ static void clean_up(bool restarting)
 #endif
 #ifdef USE_USBUTILS
 	usb_polling = false;
-	int err = pthread_join(usb_poll_thread, NULL);
+	pthread_join(usb_poll_thread, NULL);
 	libusb_exit(NULL);
 #endif
 

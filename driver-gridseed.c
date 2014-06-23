@@ -122,7 +122,7 @@ static int gc3355_write_data(struct cgpu_info *gridseed, unsigned char *data, in
 		printf("\n");
 	}
 #endif
-	err = usb_write(gridseed, data, size, &wrote, C_SENDWORK);
+	err = usb_write(gridseed, (char *)data, size, &wrote, C_SENDWORK);
 	if (err != LIBUSB_SUCCESS || wrote != size)
 		return -1;
 	return 0;
@@ -137,7 +137,7 @@ static int gc3355_get_data(struct cgpu_info *gridseed, unsigned char *buf, int s
 	readcount = size;
 	p = buf;
 	while(readcount > 0) {
-		err = usb_read_once(gridseed, p, readcount, &amount, C_GETRESULTS);
+		err = usb_read_once(gridseed, (char *)p, readcount, &amount, C_GETRESULTS);
 		if (err) {
 			if (readcount != size)
 				applog(LOG_ERR, "Timed out after receiving partial data from %i",
@@ -185,7 +185,7 @@ static void gc3355_send_cmds(struct cgpu_info *gridseed, const char *cmds[])
 static bool gc3355_read_register(struct cgpu_info *gridseed, uint32_t reg_addr,
 				 uint32_t *reg_value) {
 	GRIDSEED_INFO *info = (GRIDSEED_INFO*)(gridseed->device_data);
-	char cmd[16] = "\x55\xaa\xc0\x01";
+	unsigned char cmd[16] = "\x55\xaa\xc0\x01";
 	uint32_t reg_len = 4;
 	unsigned char buf[4];
 
@@ -215,7 +215,7 @@ static bool gc3355_read_register(struct cgpu_info *gridseed, uint32_t reg_addr,
 static bool gc3355_write_register(struct cgpu_info *gridseed, uint32_t reg_addr,
 				  uint32_t reg_value) {
 	GRIDSEED_INFO *info = (GRIDSEED_INFO*)(gridseed->device_data);
-	char cmd[16] = "\x55\xaa\xc0\x02";
+	unsigned char cmd[16] = "\x55\xaa\xc0\x02";
 	uint32_t reg_len = 4;
 	unsigned char buf[4];
 
@@ -285,7 +285,7 @@ static void gc3355_init(struct cgpu_info *gridseed, GRIDSEED_INFO *info)
 	gc3355_send_cmds(gridseed, str_reset);
 	cgsleep_ms(200);
 	usb_buffer_clear(gridseed);
-	usb_read_timeout(gridseed, buf, sizeof(buf), &amount, 10, C_GETRESULTS);
+	usb_read_timeout(gridseed, (char *)buf, sizeof(buf), &amount, 10, C_GETRESULTS);
 	gc3355_send_cmds(gridseed, str_init);
 	gc3355_send_cmds(gridseed, str_ltc_reset);
 	gc3355_set_core_freq(gridseed);
@@ -546,7 +546,7 @@ static bool gridseed_detect_one(libusb_device *dev, struct usb_find_devices *fou
 {
 	struct cgpu_info *gridseed;
 	GRIDSEED_INFO *info;
-	int err, wrote;
+	int err;
 	unsigned char rbuf[GRIDSEED_READ_SIZE];
 #if 0
 	const char detect_cmd[] =
