@@ -5,6 +5,22 @@ CGMiner 3.72 with GridSeed GC3355 support
 
 ./configure --enable-scrypt --enable-gridseed
 
+How to compile on Raspberry PI
+
+1. Update Repos
+* `sudo apt-get update`
+2. Get dependencies
+* `sudo apt-get install build-essential autoconf automake libtool pkg-config libcurl4-gnutls-dev`
+* `sudo apt-get install libjansson-dev uthash-dev libncurses5-dev libudev-dev libusb-1.0-0-dev libevent-dev`
+3. Clone the Repo
+* `git clone https://github.com/dtbartle/cgminer-gc3355.git`
+4. Move into the directory, configure, and make the binary.
+* `cd cgminer-gc3355`
+* `./configure CFLAGS="-O3" --enable-scrypt --enable-gridseed`
+* `make`
+5. Make cgminer an executable
+* `chmod +x cgminer`
+
 GC3355-specific options can be specified via --gridseed-options or
 "gridseed-options" in the configuration file as a comma-separated list of
 sub-options:
